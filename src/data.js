@@ -1,37 +1,71 @@
-'use strict';
+"use strict";
 
-const DataModel = require('./item-model.js');
+const DataModel = require("./item-model.js");
 
-const Data = { };
+const Data = {};
 
-Data.addAnItem = async(req,res,next) => {
+Data.addAnItem = async (req, res, next) => {
   try {
     const data = req.body;
     const item = new DataModel(data);
-    res.status(404).json(item);
-  } catch(e) { next(e.message); }
-}
+    await item.save()
+    res.status(200).json(item);
+  } catch (e) {
+    next(e.message);
+  }
+};
 
-Data.getAllItems = async(req, res) => {
-  const items = await DataModel.find({});
-  res.status(200).json(items);
-}
+Data.getAllItems = async (req, res) => {
+  try {
+    const items = await DataModel.find().lean().exec();
+    console.log("getAll", items);
+    res.status(200).json(items);
+  } catch (err) {
+    console.error(err);
+  }
+};
 
-Data.getOneItem = async(req, res) => {
-  const id = req.param.id;
-  const items = await DataModel.find({_id:id});
-  res.status(200).json(items[0]);
-}
+Data.getOneItem = async (req, res) => {
+  try {
+    const id = req.params.id;
 
-Data.deleteOneItem = async(req, res) => {
+    // const items = await DataModel.find({_id:id});
+    const items = await DataModel.findOne({ _id: id });
 
-}
+    // console.log("from getOneItem",items[0])
+    console.log("from getOneItem", id, items);
 
-Data.updateOneItem = async(req, res) => {
-  const id = req.param.id;
-  const data = req.body;
-  const item = await DataModel.findByIdAndUpdate(id, data, {new:true, useFindAndModify:false});
-  res.status(200).json(item);
-}
+    // res.status(200).json(items[0]);
+    res.status(200).json(items);
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+Data.deleteOneItem = async (req, res) => {
+  try {
+    const id = req.params.id;
+    await DataModel.deleteOne({ _id: id });
+    res.status(200).json("successfully deleted");
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+Data.updateOneItem = async (req, res) => {
+  try {
+    // const id = req.param.id;
+    const id = req.params.id;
+    const data = req.body;
+    const item = await DataModel.findByIdAndUpdate(id, data, {
+      new: true,
+      useFindAndModify: false,
+    });
+    console.log("from updateOneItem", id, data);
+    res.status(200).json(item);
+  } catch (err) {
+    console.error(err);
+  }
+};
 
 module.exports = Data;
